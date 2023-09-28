@@ -1,20 +1,28 @@
+from __future__ import annotations
 from iostuff.common.binary import BinaryEndian
+from typing import Self
+from contextlib import AbstractContextManager
 from struct import unpack as up
 
 
-class BinaryReader:
+class BinaryReader(AbstractContextManager):
     def __init__(self, file_path: str, endian: BinaryEndian = BinaryEndian.Little) -> None:
         self.__file_path = file_path
         self.__endian = "<" if endian == BinaryEndian.Little else ">"
-        self.__file_mode = "rb"
         self.__fp = None
 
-    def __enter__(self):
-        self.__fp = open(self.__file_path, self.__file_mode)
+    def __enter__(self) -> Self:
+        return self.open()
+
+    def __exit__(self, *e) -> None:
+        return self.close()
+
+    def open(self) -> Self:
+        self.__fp = open(self.__file_path, "rb")
         return self
 
-    def __exit__(self, type, value, traceback) -> None:
-        self.__fp.close()
+    def close(self) -> None:
+        return self.__fp.close()
 
     def read(self, number: int) -> bytes:
         return self.__fp.read(number)

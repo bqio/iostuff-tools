@@ -1,23 +1,29 @@
-from typing import Any, Iterable
-import _csv
+from typing import Any, Iterable, Self
+from contextlib import AbstractContextManager
+from _csv import writer
 
 
-class CSVWriter:
+class CSVWriter(AbstractContextManager):
     def __init__(self, file_path: str, file_encoding: str = "utf-8") -> None:
         self.__file_path = file_path
-        self.__file_mode = "w"
         self.__file_encoding = file_encoding
         self.__fp = None
         self.__writer = None
 
-    def __enter__(self):
-        self.__fp = open(self.__file_path, self.__file_mode,
+    def __enter__(self) -> Self:
+        return self.open()
+
+    def __exit__(self, *e) -> None:
+        return self.close()
+
+    def open(self) -> Self:
+        self.__fp = open(self.__file_path, "w",
                          encoding=self.__file_encoding, newline='')
-        self.__writer = _csv.writer(self.__fp)
+        self.__writer = writer(self.__fp)
         return self
 
-    def __exit__(self, type, value, traceback) -> None:
-        self.__fp.close()
+    def close(self) -> None:
+        return self.__fp.close()
 
     def write_row(self, row: Iterable[Any]) -> None:
         self.__writer.writerow(row)

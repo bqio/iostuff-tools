@@ -1,11 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from io import BytesIO
-
+from contextlib import AbstractContextManager
+from typing import Self
 from iostuff.common.binary import BinaryEndian
 from struct import pack as pk
+from io import BytesIO
 
 
 class MemoryWriter(BytesIO):
@@ -54,17 +52,22 @@ class MemoryWriter(BytesIO):
         return self.seek(self.tell() + number)
 
 
-class BinaryWriter(MemoryWriter):
+class BinaryWriter(AbstractContextManager, MemoryWriter):
     def __init__(self, file_path: str, endian: BinaryEndian = BinaryEndian.Little) -> None:
         super().__init__(endian)
         self.__file_path = file_path
-        self.__file_mode = "wb"
         self.__fp = None
 
-    def __enter__(self):
-        self.__fp = open(self.__file_path, self.__file_mode)
+    def __enter__(self) -> Self:
+        return self.open()
+
+    def __exit__(self, *e) -> None:
+        return self.close()
+
+    def open(self) -> Self:
+        self.__fp = open(self.__file_path, "wb")
         return self
 
-    def __exit__(self, type, value, traceback):
+    def close(self) -> None:
         self.__fp.write(self.getbuffer())
-        self.__fp.close()
+        return self.__fp.close()

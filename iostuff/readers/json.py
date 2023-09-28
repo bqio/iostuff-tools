@@ -1,18 +1,26 @@
-from typing import Any
+from typing import Generic, TypeVar
+from contextlib import AbstractContextManager
 import jsonpickle
 
+T = TypeVar("T")
 
-class JsonReader:
-    def __init__(self, file_path: str) -> None:
+
+class JsonReader(AbstractContextManager, Generic[T]):
+    def __init__(self, file_path: str, file_encoding: str = "utf-8") -> None:
         self.__file_path = file_path
-        self.__file_mode = "r"
-        self.__file_encoding = "utf-8"
+        self.__file_encoding = file_encoding
         self.__fp = None
 
-    def __enter__(self) -> Any:
-        self.__fp = open(self.__file_path, self.__file_mode,
+    def __enter__(self) -> T:
+        return self.open()
+
+    def __exit__(self, *e) -> None:
+        return self.close()
+
+    def open(self) -> T:
+        self.__fp = open(self.__file_path, "r",
                          encoding=self.__file_encoding)
         return jsonpickle.decode(self.__fp.read())
 
-    def __exit__(self, type, value, traceback) -> None:
-        self.__fp.close()
+    def close(self) -> None:
+        return self.__fp.close()
