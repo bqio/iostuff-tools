@@ -91,3 +91,19 @@ with BinaryWriter("data.bin", BinaryEndian.Big) as writer:
     writer.write_byte(2)
     writer.write_utf8_string("Hello")
 ```
+
+### Usage
+
+```python
+from iostuff.readers.binary import BinaryReader
+from iostuff.writers.json import JsonWriter
+
+class User:
+    name: str
+
+with BinaryReader("data.bin") as reader:
+    with JsonWriter[User]("data.json") as writer:
+        user = User()
+        user.name = reader.read_utf8_nt_string()
+        writer.write(user)
+```
